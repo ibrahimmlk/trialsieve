@@ -55,8 +55,9 @@ def main():
     ap.add_argument("--output-dir", default="outputs/lora-qwen1.5b")
     ap.add_argument("--epochs", type=float, default=3)
     ap.add_argument("--lr", type=float, default=2e-4)
-    ap.add_argument("--batch-size", type=int, default=4)
-    ap.add_argument("--grad-accum", type=int, default=4)
+    # Effective batch 16. Batch 4 OOMs on a 15 GB T4: Qwen's 152k-token vocabulary makes fp32 logits ~1.6 GB per batch.
+    ap.add_argument("--batch-size", type=int, default=2)
+    ap.add_argument("--grad-accum", type=int, default=8)
     ap.add_argument("--lora-r", type=int, default=16)
     ap.add_argument("--lora-alpha", type=int, default=32)
     ap.add_argument("--lora-dropout", type=float, default=0.05)
@@ -80,7 +81,9 @@ def main():
     }
     print("Token length stats:", json.dumps(stats))
 
-    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float16, attn_implementation="sdpa")
+    dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype, attn_implementation="sdpa")
+    model.enable_input_require_grads()  # needed for gradient checkpointing with a frozen base model
     model = get_peft_model(model, LoraConfig(
         r=args.lora_r, lora_alpha=args.lora_alpha, lora_dropout=args.lora_dropout, task_type="CAUSAL_LM",
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]))
@@ -93,7 +96,8 @@ def main():
         weight_decay=0.0, fp16=torch.cuda.is_available(), logging_steps=5, eval_strategy="steps", eval_steps=10,
         save_strategy="steps", save_steps=10, save_total_limit=2, load_best_model_at_end=True,
         metric_for_best_model="eval_loss", greater_is_better=False, report_to="none", seed=args.seed,
-        remove_unused_columns=False, max_steps=args.max_steps)
+        remove_unused_columns=False, max_steps=args.max_steps,
+        gradient_checkpointing=True, gradient_checkpointing_kwargs={"use_reentrant": False})
     strip = lambda rows: [{"input_ids": r["input_ids"], "labels": r["labels"]} for r in rows]
     trainer = Trainer(model=model, args=targs, train_dataset=strip(train), eval_dataset=strip(val),
                       data_collator=Collator(tok.pad_token_id))
