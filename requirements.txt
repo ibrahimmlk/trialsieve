@@ -10,3 +10,4 @@ scikit-learn
 matplotlib
 gradio
 huggingface_hub
+pytest

@@ -50,7 +50,7 @@ def main():
     for i in range(0, len(prompts), args.batch_size):
         batch = tok(prompts[i:i + args.batch_size], return_tensors="pt", padding=True, add_special_tokens=False).to(device)
         with torch.no_grad():
-            gen = model.generate(**batch, do_sample=False, max_new_tokens=args.max_new_tokens,
+            gen = model.generate(**batch, do_sample=False, max_new_tokens=args.max_new_tokens, repetition_penalty=1.0,
                                  pad_token_id=tok.pad_token_id)
         outputs += tok.batch_decode(gen[:, batch["input_ids"].shape[1]:], skip_special_tokens=True)
         print(f"{min(i + args.batch_size, len(prompts))}/{len(prompts)}", flush=True)
@@ -65,7 +65,7 @@ def main():
                       "gold_evidence": gold_evidence(r), "evidence": ids, "raw_output": text})
 
     report = full_report(records, preds)
-    report["config"] = {"model": args.model, "adapter": args.adapter, "split": args.split, "decoding": "greedy",
+    report["config"] = {"model": args.model, "adapter": args.adapter, "split": args.split, "decoding": "greedy (repetition_penalty=1.0; Qwen default 1.1 overridden)",
                         "max_new_tokens": args.max_new_tokens, "dtype": str(dtype), "device": device,
                         "n": len(records), "seconds": elapsed}
     out = Path(args.out_dir)
