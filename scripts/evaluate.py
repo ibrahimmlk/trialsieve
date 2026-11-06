@@ -38,7 +38,7 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.float16 if device == "cuda" else torch.float32
     tok = AutoTokenizer.from_pretrained(args.model, padding_side="left")
-    model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=dtype, attn_implementation="sdpa").to(device)
+    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=dtype, attn_implementation="sdpa").to(device)
     if args.adapter:
         from peft import PeftModel
         model = PeftModel.from_pretrained(model, args.adapter).merge_and_unload()

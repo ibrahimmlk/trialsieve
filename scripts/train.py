@@ -78,7 +78,7 @@ def main():
     }
     print("Token length stats:", json.dumps(stats))
 
-    model = AutoModelForCausalLM.from_pretrained(args.model, torch_dtype=torch.float16, attn_implementation="sdpa")
+    model = AutoModelForCausalLM.from_pretrained(args.model, dtype=torch.float16, attn_implementation="sdpa")
     model = get_peft_model(model, LoraConfig(
         r=args.lora_r, lora_alpha=args.lora_alpha, lora_dropout=args.lora_dropout, task_type="CAUSAL_LM",
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]))
