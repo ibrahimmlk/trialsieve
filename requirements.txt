@@ -1,0 +1,12 @@
+numpy
+pandas
+pyarrow
+torch
+transformers
+peft
+accelerate
+datasets
+scikit-learn
+matplotlib
+gradio
+huggingface_hub
