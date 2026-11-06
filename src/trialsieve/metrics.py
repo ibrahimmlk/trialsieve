@@ -75,6 +75,8 @@ def full_report(records, preds):
     out = {}
     for subset in ["all", "inclusion", "exclusion"]:
         idx = [i for i, r in enumerate(records) if subset == "all" or r["criterion_type"] == subset]
+        if not idx:
+            continue
         gold = [records[i]["expert_eligibility"] for i in idx]
         pred = [preds[i]["label"] for i in idx]
         out[subset] = {

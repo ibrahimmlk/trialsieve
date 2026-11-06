@@ -4,7 +4,7 @@ from pathlib import Path
 
 CELLS = [
     ("md", "# TrialSieve: LoRA fine-tuning on Kaggle\nSettings: Accelerator **GPU T4 x2**, Internet **On**, secret `HF_TOKEN` attached. Run cells top to bottom."),
-    ("code", "!rm -rf trialsieve && git clone -q https://github.com/ibrahimmlk/trialsieve.git\n%cd trialsieve\n!git log --oneline -1\n!pip install -q -U peft\nimport os; os.environ['CUDA_VISIBLE_DEVICES'] = '0'  # single T4\n!nvidia-smi --query-gpu=name,memory.total --format=csv"),
+    ("code", "!rm -rf trialsieve && git clone -q https://github.com/ibrahimmlk/trialsieve.git\n%cd trialsieve\n!git log --oneline -1\n!pip install -q -U peft\n!pip uninstall -y -q torchao  # Kaggle's torchao 0.10 makes peft refuse to load; it is unused here\nimport os; os.environ['CUDA_VISIBLE_DEVICES'] = '0'  # single T4\n!nvidia-smi --query-gpu=name,memory.total --format=csv"),
     ("code", "from kaggle_secrets import UserSecretsClient\nfrom huggingface_hub import login\nlogin(UserSecretsClient().get_secret('HF_TOKEN'))"),
     ("md", "## 1. Base model on validation (before fine-tuning)"),
     ("code", "!python scripts/evaluate.py --split val --tag base"),
