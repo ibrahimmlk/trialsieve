@@ -12,3 +12,4 @@ report/*.bbl
 report/*.blg
 .ipynb_checkpoints/
 GenAI_Assignment2.pdf
+.env
