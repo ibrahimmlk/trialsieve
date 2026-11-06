@@ -62,14 +62,16 @@ def main():
     ap.add_argument("--lora-dropout", type=float, default=0.05)
     ap.add_argument("--max-len", type=int, default=1024)
     ap.add_argument("--seed", type=int, default=42)
+    ap.add_argument("--max-steps", type=int, default=-1, help="debug: stop after N optimizer steps")
+    ap.add_argument("--limit", type=int, default=None, help="debug: use only the first N train/val records")
     args = ap.parse_args()
     set_seed(args.seed)
     out = Path(args.output_dir)
     out.mkdir(parents=True, exist_ok=True)
 
     tok = AutoTokenizer.from_pretrained(args.model)
-    train = [encode(tok, r, args.max_len) for r in load_split("train")]
-    val = [encode(tok, r, args.max_len) for r in load_split("val")]
+    train = [encode(tok, r, args.max_len) for r in load_split("train")[: args.limit]]
+    val = [encode(tok, r, args.max_len) for r in load_split("val")[: args.limit]]
     stats = {
         split: {"n": len(rows), "max_tokens": max(r["length"] for r in rows),
                 "mean_tokens": sum(r["length"] for r in rows) / len(rows),
@@ -87,11 +89,11 @@ def main():
     targs = TrainingArguments(
         output_dir=str(out / "checkpoints"), num_train_epochs=args.epochs, learning_rate=args.lr,
         per_device_train_batch_size=args.batch_size, per_device_eval_batch_size=args.batch_size,
-        gradient_accumulation_steps=args.grad_accum, lr_scheduler_type="cosine", warmup_ratio=0.05,
+        gradient_accumulation_steps=args.grad_accum, lr_scheduler_type="cosine", warmup_steps=0.05,
         weight_decay=0.0, fp16=torch.cuda.is_available(), logging_steps=5, eval_strategy="steps", eval_steps=10,
         save_strategy="steps", save_steps=10, save_total_limit=2, load_best_model_at_end=True,
         metric_for_best_model="eval_loss", greater_is_better=False, report_to="none", seed=args.seed,
-        remove_unused_columns=False, group_by_length=False)
+        remove_unused_columns=False, max_steps=args.max_steps)
     strip = lambda rows: [{"input_ids": r["input_ids"], "labels": r["labels"]} for r in rows]
     trainer = Trainer(model=model, args=targs, train_dataset=strip(train), eval_dataset=strip(val),
                       data_collator=Collator(tok.pad_token_id))
