@@ -1,0 +1,34 @@
+{
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "output_dir": "outputs/lora-qwen1.5b",
+  "epochs": 3,
+  "lr": 0.0002,
+  "batch_size": 2,
+  "grad_accum": 8,
+  "lora_r": 16,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "max_len": 1024,
+  "seed": 42,
+  "max_steps": -1,
+  "limit": null,
+  "token_stats": {
+    "train": {
+      "n": 603,
+      "max_tokens": 650,
+      "mean_tokens": 356.5737976782753,
+      "truncated": 0
+    },
+    "val": {
+      "n": 206,
+      "max_tokens": 484,
+      "mean_tokens": 369.378640776699,
+      "truncated": 0
+    }
+  },
+  "best_checkpoint": "outputs/lora-qwen1.5b/checkpoints/checkpoint-80",
+  "best_eval_loss": 0.11279989778995514,
+  "trainable_params": 18464768,
+  "torch": "2.11.0+cu130",
+  "gpu": "Tesla T4"
+}
