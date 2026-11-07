@@ -66,3 +66,17 @@ def test_speculative_equals_target_greedy(models, k):
     out, stats = speculative(target, draft, ids, 40, k=k)
     assert out == ref
     assert stats["accepted"] < stats["drafted"], "test should exercise rejections"
+
+
+def test_prefix_reuse_matches_fresh_cache(models):
+    """Several criteria for one patient: reusing the shared prefix must not change any output."""
+    tok, _, m = models
+    base = PROMPTS[2].split("Criterion:")[0]
+    prompts = [tok(base + c).input_ids for c in
+               ["Criterion: Age over 18.", "Criterion: History of diabetes.", "Criterion: Current smoker."]]
+    state = {}
+    for ids in prompts:
+        fresh, _ = greedy_kv(m, ids, 12)
+        reused, stats = greedy_kv(m, ids, 12, prefix_state=state)
+        assert reused == fresh
+    assert stats["reused_prefix_tokens"] > 0
