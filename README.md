@@ -9,6 +9,8 @@ against a trial and exports an auditable report.
 
 Report: [report/main.pdf](report/main.pdf) (IEEE format, LaTeX source in [report/](report/)).
 
+Demo video (about 5 min): <https://youtu.be/n4dS_2brjwQ>
+
 ## Results (held-out test split: 8 patients, 206 criteria, evaluated once)
 
 | Model | Accuracy | Macro-F1 | Evidence micro-F1 | Evidence F1 (gold non-empty) |
