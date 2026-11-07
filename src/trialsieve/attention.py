@@ -17,19 +17,26 @@ def causal_mask(tq, tk, q_offset, device):
     return k_pos <= q_pos
 
 
-def reference_attention(q, k, v, q_offset=0, causal=True):
-    """softmax(QK^T / sqrt(d) + mask) V with max subtraction, computed in fp32."""
+def reference_attention(q, k, v, q_offset=0, causal=True, mask=None):
+    """softmax(QK^T / sqrt(d) + mask) V with max subtraction, computed in fp32 (fp64 for fp64 inputs).
+
+    `mask` (optional, bool, broadcastable to [B, H, Tq, Tk], True = allowed) is combined with the
+    causal rule; batched decoding uses it for rows whose caches have different lengths.
+    """
+    acc = torch.float64 if q.dtype == torch.float64 else torch.float32
     scale = 1.0 / math.sqrt(q.shape[-1])
-    scores = torch.matmul(q.float(), k.float().transpose(-1, -2)) * scale
+    scores = torch.matmul(q.to(acc), k.to(acc).transpose(-1, -2)) * scale
     if causal:
         scores = scores.masked_fill(~causal_mask(q.shape[-2], k.shape[-2], q_offset, q.device), float("-inf"))
+    if mask is not None:
+        scores = scores.masked_fill(~mask, float("-inf"))
     scores = scores - scores.amax(dim=-1, keepdim=True)  # numerical stability
     p = scores.exp()
     p = p / p.sum(dim=-1, keepdim=True)
-    return torch.matmul(p, v.float()).to(q.dtype)
+    return torch.matmul(p, v.to(acc)).to(q.dtype)
 
 
-def tiled_attention(q, k, v, q_offset=0, causal=True, block_q=64, block_k=64):
+def tiled_attention(q, k, v, q_offset=0, causal=True, block_q=64, block_k=64, mask=None):
     """FlashAttention-style tiling: never materialises the full [Tq, Tk] score matrix.
 
     For each query block we stream over key/value blocks and keep, per query row,
@@ -59,6 +66,8 @@ def tiled_attention(q, k, v, q_offset=0, causal=True, block_q=64, block_k=64):
                 allowed = (torch.arange(ks, ke, device=q.device)[None, :]
                            <= torch.arange(qs, qe, device=q.device)[:, None] + q_offset)
                 s = s.masked_fill(~allowed, float("-inf"))
+            if mask is not None:
+                s = s.masked_fill(~mask[..., qs:qe, ks:ke], float("-inf"))
             m_new = torch.maximum(m, s.amax(dim=-1, keepdim=True))
             # Rows whose every key so far is masked keep m = -inf; use 0 to avoid inf - inf = nan.
             m_safe = torch.where(torch.isinf(m_new), torch.zeros_like(m_new), m_new)
@@ -71,10 +80,12 @@ def tiled_attention(q, k, v, q_offset=0, causal=True, block_q=64, block_k=64):
     return out.to(q.dtype)
 
 
-def sdpa_attention(q, k, v, q_offset=0, causal=True):
+def sdpa_attention(q, k, v, q_offset=0, causal=True, mask=None):
     """PyTorch's fused scaled_dot_product_attention, used as an external reference/baseline."""
-    mask = causal_mask(q.shape[-2], k.shape[-2], q_offset, q.device) if causal else None
-    return torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=mask)
+    full = causal_mask(q.shape[-2], k.shape[-2], q_offset, q.device) if causal else None
+    if mask is not None:
+        full = mask if full is None else (full & mask)
+    return torch.nn.functional.scaled_dot_product_attention(q, k, v, attn_mask=full)
 
 
 ATTENTION = {"reference": reference_attention, "tiled": tiled_attention, "sdpa": sdpa_attention}

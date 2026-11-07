@@ -95,12 +95,13 @@ class ManualQwen2:
         return x * cos + rotated * sin
 
     @torch.no_grad()
-    def forward(self, input_ids, cache=None, last_only=False):
+    def forward(self, input_ids, cache=None, last_only=False, select=None):
         """Run new tokens through the decoder.
 
         input_ids: [B, T] tokens at absolute positions cache.length .. cache.length + T - 1
         (0 .. T-1 without a cache, i.e. the uncached reference path recomputes everything).
-        Returns logits [B, T, V] (or [B, 1, V] with last_only) and advances the cache by T.
+        Returns logits [B, T, V] (or [B, 1, V] with last_only, or [B, 1, V] at per-row
+        positions `select` [B]) and advances the cache by T.
         """
         B, T = input_ids.shape
         offset = cache.length if cache is not None else 0
@@ -129,5 +130,47 @@ class ManualQwen2:
 
         if cache is not None:
             cache.advance(T)
-        h = self._rms_norm(h[:, -1:] if last_only else h, self.m.norm.weight)
+        if select is not None:
+            h = h[torch.arange(B, device=self.device), select][:, None]
+        elif last_only:
+            h = h[:, -1:]
+        h = self._rms_norm(h, self.m.norm.weight)
         return self.lm_head(h).float()
+
+    @torch.no_grad()
+    def decode_step_ragged(self, tokens, cache, lengths):
+        """One decoding step for B independent sequences whose caches have different lengths.
+
+        tokens: [B] next input token per row; lengths: [B] long tensor, positions already
+        cached per row. Row b's token sits at position lengths[b]: its key/value is written
+        there, RoPE uses that position, and it attends to keys 0..lengths[b] of its own row
+        only (entries beyond a row's length are padding/stale and are masked out).
+        Returns logits [B, V]; the caller advances `lengths`.
+        """
+        B = tokens.shape[0]
+        rows = torch.arange(B, device=self.device)
+        cos, sin = self._rope(lengths)  # [B, D]
+        cos, sin = cos[:, None, None, :], sin[:, None, None, :]
+        tk = int(lengths.max()) + 1
+        mask = (torch.arange(tk, device=self.device)[None, :] <= lengths[:, None])[:, None, None, :]  # [B,1,1,Tk]
+
+        h = self.m.embed_tokens(tokens[:, None])  # [B, 1, hidden]
+        for i, layer in enumerate(self.m.layers):
+            a = layer.self_attn
+            x = self._rms_norm(h, layer.input_layernorm.weight)
+            q = a.q_proj(x).view(B, 1, self.n_heads, self.head_dim).transpose(1, 2)
+            k = a.k_proj(x).view(B, 1, self.n_kv, self.head_dim).transpose(1, 2)
+            v = a.v_proj(x).view(B, 1, self.n_kv, self.head_dim).transpose(1, 2)
+            q, k = self._apply_rope(q, cos, sin), self._apply_rope(k, cos, sin)
+            cache.k[i][rows, :, lengths] = k[:, :, 0]  # scatter each row's new key to its own position
+            cache.v[i][rows, :, lengths] = v[:, :, 0]
+            rep = self.n_heads // self.n_kv
+            keys = cache.k[i][:, :, :tk].repeat_interleave(rep, dim=1)
+            vals = cache.v[i][:, :, :tk].repeat_interleave(rep, dim=1)
+            o = self.attn(q, keys, vals, causal=False, mask=mask)
+            h = h + a.o_proj(o.transpose(1, 2).reshape(B, 1, -1))
+            x = self._rms_norm(h, layer.post_attention_layernorm.weight)
+            mlp = layer.mlp
+            h = h + mlp.down_proj(torch.nn.functional.silu(mlp.gate_proj(x)) * mlp.up_proj(x))
+        h = self._rms_norm(h, self.m.norm.weight)
+        return self.lm_head(h)[:, 0].float()

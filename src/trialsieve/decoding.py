@@ -165,4 +165,62 @@ def speculative(target, draft, prompt, max_new_tokens, eos_ids=(), k=4, **_):
     return _finish(out, stats, prefill_s, time.perf_counter() - t0 - prefill_s, dev, mem0)
 
 
+def greedy_kv_batch(model, prompts, max_new_tokens, eos_ids=()):
+    """Greedy decoding of several prompts at once (e.g. all criteria of one patient).
+
+    1. The longest common token prefix (system prompt + patient note) is prefilled once.
+    2. Its keys/values are copied into every row of a batched cache; the rows' own
+       suffixes (criterion text) are then prefilled together, right-padded.
+    3. Decoding feeds one token per row per step through decode_step_ragged: rows keep
+       their own lengths, positions and masks. On CPU a decoding step is memory-bandwidth
+       bound, so B rows cost little more than one.
+    Rows that hit EOS keep running (outputs ignored) until all rows finish.
+    Returns (list of token lists, stats).
+    """
+    dev = model.device
+    B = len(prompts)
+    p = 0
+    while p < min(len(x) for x in prompts) - 1 and all(x[p] == prompts[0][p] for x in prompts):
+        p += 1
+    cache = model.new_cache(max(len(x) for x in prompts) + max_new_tokens, batch=B)
+    _sync(dev); t0 = time.perf_counter()
+
+    if p:
+        shared = model.new_cache(p)
+        model.forward(torch.tensor([prompts[0][:p]], device=dev), shared)
+        cache.k[:, :, :, :p] = shared.k
+        cache.v[:, :, :, :p] = shared.v
+    # Right-padded batched prefill of the suffixes. Causal masking means a real token never
+    # attends to the padding after it; padded slots are overwritten during decoding.
+    suffixes = [x[p:] for x in prompts]
+    width = max(len(x) for x in suffixes)
+    batch = torch.tensor([x + [x[-1]] * (width - len(x)) for x in suffixes], device=dev)
+    cache.length = p
+    last = torch.tensor([len(x) - 1 for x in suffixes], device=dev)
+    first = model.forward(batch, cache, select=last)[:, 0].argmax(-1).tolist()
+    _sync(dev); prefill_s = time.perf_counter() - t0
+
+    lengths = torch.tensor([len(x) for x in prompts], device=dev)
+    outs = [[t] for t in first]
+    done = [t in eos_ids for t in first]
+    steps = 0
+    while not all(done) and len(outs[0]) < max_new_tokens:
+        logits = model.decode_step_ragged(torch.tensor([o[-1] for o in outs], device=dev), cache, lengths)
+        lengths += 1
+        steps += 1
+        for b, t in enumerate(logits.argmax(-1).tolist()):
+            outs[b].append(t)
+            done[b] = done[b] or t in eos_ids
+    _sync(dev)
+    total = time.perf_counter() - t0
+    trimmed = []
+    for o in outs:  # cut each row after its first EOS
+        cut = next((i + 1 for i, t in enumerate(o) if t in eos_ids), len(o))
+        trimmed.append(o[:cut])
+    n = sum(len(o) for o in trimmed)
+    return trimmed, {"mode": "kv_cache_batched", "batch": B, "shared_prefix_tokens": p, "decode_steps": steps,
+                     "prefill_s": prefill_s, "decode_s": total - prefill_s, "total_s": total, "new_tokens": n,
+                     "e2e_tok_per_s": n / total if total else None}
+
+
 DECODERS = {"no_cache": greedy_no_cache, "kv_cache": greedy_kv}
