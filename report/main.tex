@@ -355,14 +355,19 @@ Prompts & Draft & $k$ & Accept & Tok/pass & Speed-up & Equal\\
 We screened one validation patient against a 21-criterion trial (mean prompt 357 tokens, of which 238 are shared) on the laptop CPU, one run per method because each takes minutes. Sequential KV decoding took 255\,s. Sequential decoding with prefix reuse took 198\,s (1.29$\times$): the shared note is prefilled once instead of 21 times. Batched decoding took \textbf{61\,s (4.2$\times$)}: 43.5\,s of prefill and 17.4\,s for 16 decoding steps. One step for all 21 rows costs about 1.1\,s, against 0.5\,s for a single row, because a CPU decoding step mostly streams the 6.2\,GB of fp32 weights from memory and that cost is shared across rows. All three methods produced identical outputs for all 21 criteria. We also tried bf16 weights (prefill 5$\times$ slower: this CPU lacks native bf16 matrix units) and PyTorch dynamic int8 quantisation (slower, and 0/8 outputs matched fp32), and rejected both.
 
 \subsection{Application}
-Fig.~\ref{fig:app} shows the screening view and the inference lab. On the laptop, the application loads the merged model in about 15\,s, screens a 10-criterion trial in about 33\,s with batched decoding, and reproduces the evaluation script's predictions exactly (CPU fp32 vs.\ GPU fp16) on the checked examples. In a single lab run on one 369-token criterion prompt, uncached decoding took 76.8\,s, cached 13.1\,s, \code{generate()} 10.5\,s and speculative decoding with the LoRA draft 8.2\,s, all producing identical tokens.
+Figs.~\ref{fig:app} and~\ref{fig:lab} show the screening view and the inference lab. On the laptop, the application loads the merged model in about 15\,s, screens a 10-criterion trial in about 33\,s with batched decoding, and reproduces the evaluation script's predictions exactly (CPU fp32 vs.\ GPU fp16) on the checked examples. In a single lab run on one 369-token criterion prompt, uncached decoding took 76.8\,s, cached 13.1\,s, \code{generate()} 10.5\,s and speculative decoding with the LoRA draft 8.2\,s, all producing identical tokens.
 
 \begin{figure*}[t]
 \centering
-\IfFileExists{figures/app_screening.png}{\includegraphics[width=0.49\textwidth]{figures/app_screening.png}}{\fbox{\parbox{0.45\textwidth}{\centering screening screenshot}}}\hfill
-\IfFileExists{figures/app_lab.png}{\includegraphics[width=0.49\textwidth]{figures/app_lab.png}}{\fbox{\parbox{0.45\textwidth}{\centering inference lab screenshot}}}
-\caption{Browser application. Left: screening a validation patient: rule-based outcome, missing information, and per-criterion label, expert label, cited sentence IDs, evidence text and explanation, with downloadable reports. Right: inference lab comparing decoders on the same prompt (token identity, prefill/decode time, throughput, acceptance, cache size).}
+\includegraphics[width=0.86\textwidth]{figures/app_screening.png}
+\caption{Screening view (validation patient, 10 criteria): rule-based preliminary outcome, missing information, agreement with expert labels and run provenance (top); per-criterion predicted label, expert label, cited sentence IDs, evidence text and an explanation grounded in the cited sentences (bottom, first three rows). HTML and JSON reports are downloadable.}
 \label{fig:app}
+\end{figure*}
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.86\textwidth]{figures/app_lab.png}
+\caption{Inference lab: the same 369-token criterion prompt decoded live on the laptop CPU with the manual KV cache (reference), speculative decoding with the LoRA draft and Hugging Face \code{generate()}. Token identity, prefill/decode time, throughput, draft acceptance and tokens per target pass are reported for each.}
+\label{fig:lab}
 \end{figure*}
 
 \section{Limitations}
