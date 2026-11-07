@@ -221,7 +221,8 @@ def training_plot():
 
 def gpu_tables():
     kv = _load("benchmarks/kv_cache.json")
-    kv_rows = [[r["prompt_tokens"], r["new_tokens"], r["tokens_equal"], r["no_cache"]["total_s"], r["kv_cache"]["total_s"],
+    kv_rows = [[r["prompt_tokens"], r["new_tokens"], r["tokens_equal"], round(r["no_cache"]["total_s"], 2),
+                round(r["kv_cache"]["total_s"], 2),
                 round(r["no_cache"]["decode_tok_per_s"], 1), round(r["kv_cache"]["decode_tok_per_s"], 1),
                 round(r["no_cache"]["peak_mem_bytes"] / 2**20, 1), round(r["kv_cache"]["peak_mem_bytes"] / 2**20, 1),
                 round(r["speedup_total"], 2)] for r in (kv or {}).get("rows", [])]
@@ -268,11 +269,13 @@ with gr.Blocks(title="TrialSieve") as demo:
                 run = gr.Button("Screen patient", variant="primary")
             with gr.Column(scale=7):
                 verdict = gr.HTML()
-                table = gr.Dataframe(headers=["#", "Type", "Criterion", "Predicted", "Expert label", "Evidence IDs",
-                                              "Evidence text", "Explanation"], wrap=True, interactive=False)
                 with gr.Accordion("Patient note with sentence IDs", open=False):
                     note_view = gr.HTML()
                 files = gr.File(label="Download report (HTML + JSON with provenance)", file_count="multiple")
+        table = gr.Dataframe(headers=["#", "Type", "Criterion", "Predicted", "Expert label", "Evidence IDs",
+                                      "Evidence text", "Explanation"], wrap=True, interactive=False, max_height=900,
+                             column_widths=["3%", "7%", "24%", "10%", "10%", "6%", "18%", "22%"],
+                             label="Criterion-level results")
         ex_btn.click(load_example, ex, [note, inc, exc, gold_state, status])
         nct_btn.click(fetch_trial, nct, [inc, exc, gold_state, status])
         note.input(lambda: {}, None, gold_state)  # edited input: expert labels no longer apply
