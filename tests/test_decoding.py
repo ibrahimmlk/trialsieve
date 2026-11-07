@@ -80,3 +80,21 @@ def test_prefix_reuse_matches_fresh_cache(models):
         reused, stats = greedy_kv(m, ids, 12, prefix_state=state)
         assert reused == fresh
     assert stats["reused_prefix_tokens"] > 0
+
+
+@pytest.mark.parametrize("attention", ["reference", "tiled", "sdpa"])
+def test_batched_ragged_decoding_matches_single(models, attention):
+    """Criteria of different lengths decoded together must equal decoding each one alone."""
+    from trialsieve.decoding import greedy_kv_batch
+    tok, _, m = models
+    m.set_attention(attention)
+    base = PROMPTS[2].split("Criterion:")[0]
+    prompts = [tok(base + c).input_ids for c in
+               ["Criterion: Age over 18.", "Criterion: History of diabetes mellitus type 2 requiring insulin therapy.",
+                "Criterion: Smoker.", "Criterion: Pregnant or breastfeeding women, or women planning pregnancy."]]
+    eos = {tok.eos_token_id}
+    singles = [greedy_kv(m, ids, 20, eos_ids=eos)[0] for ids in prompts]
+    batched, stats = greedy_kv_batch(m, prompts, 20, eos_ids=eos)
+    m.set_attention("reference")
+    assert batched == singles
+    assert stats["shared_prefix_tokens"] > 0
