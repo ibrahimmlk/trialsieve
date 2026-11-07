@@ -35,7 +35,8 @@ def training():
     ax.text(int(best) + 1, ax.get_ylim()[1] * 0.85, f"selected\nstep {best}", fontsize=6, color="gray")
     ax.set_xlabel("optimizer step (effective batch 16)")
     ax.set_ylabel("cross-entropy (answer tokens)")
-    ax.legend(ncol=2)
+    ax.set_ylim(0.03, 0.36)
+    ax.legend(ncol=2, loc="upper right", fontsize=6)
     ax.grid(alpha=.3)
     fig.tight_layout()
     fig.savefig(OUT / "training.pdf")
@@ -58,7 +59,7 @@ def confusion():
             for j in range(6):
                 if M[i, j]:
                     ax.text(j, i, M[i, j], ha="center", va="center", fontsize=7, color="white" if M[i, j] > M.max() / 2 else "black")
-        ax.set_xticks(range(6), short, rotation=30)
+        ax.set_xticks(range(6), short, rotation=40, ha="right")
         ax.set_yticks(range(6), short)
         ax.set_xlabel("predicted")
         ax.set_ylabel("expert")
@@ -129,7 +130,7 @@ def speculative():
         ax.set_xlabel("draft length k")
         ax.set_xticks([2, 4, 6])
         ax.grid(alpha=.3)
-        ax.legend(fontsize=6)
+        ax.legend(fontsize=5.5, loc="lower left")
     fig.tight_layout()
     fig.savefig(OUT / "speculative.pdf")
 
