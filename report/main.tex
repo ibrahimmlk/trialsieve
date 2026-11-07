@@ -18,7 +18,7 @@
 
 \begin{document}
 
-\title{TrialSieve: Evidence-Grounded Criterion-Level Clinical-Trial Screening with a Fine-Tuned Small Transformer and From-Scratch Efficient Inference}
+\title{Evidence-Grounded Criterion-Level Clinical-Trial Screening with a Fine-Tuned Small Transformer and From-Scratch Efficient Inference}
 
 \author{\IEEEauthorblockN{Muhammad Ibrahim Malik (23i-0694)}
 \IEEEauthorblockA{\textit{Department of Computer Science} \\
@@ -107,7 +107,7 @@ We apply LoRA (rank 16, $\alpha=32$, dropout 0.05) to all attention and MLP proj
 \end{figure}
 
 \subsection{System Architecture}
-Fig.~\ref{fig:arch} shows the pipeline. Only the weights come from Hugging Face. The forward pass, cache, attention kernels and decoding loops are our own code (\code{src/trialsieve}).
+Fig.~\ref{fig:arch} shows the pipeline. Only the weights come from Hugging Face. The forward pass, cache, attention kernels and decoding loops are our own code (the \code{src/} package of the repository).
 
 \begin{figure*}[t]
 \centering
@@ -129,7 +129,7 @@ Fig.~\ref{fig:arch} shows the pipeline. Only the weights come from Hugging Face.
 \draw[arr] (model) -- (parse); \draw[arr] (parse) -- (agg); \draw[arr] (agg) -- (rep);
 \draw[arr] (kv) -- (model); \draw[arr] (att) -- (model); \draw[arr] (spec) -- (model);
 \end{tikzpicture}
-\caption{TrialSieve pipeline. Orange modules are implemented from scratch and can be switched at run time in the application.}
+\caption{Screening pipeline, from patient note and trial criteria to a criterion-level report. Orange modules are implemented from scratch and can be switched at run time in the application.}
 \label{fig:arch}
 \end{figure*}
 
