@@ -28,7 +28,7 @@ Generative AI, Assignment 2 --- Instructor: Dr.\ Akhter Jamil}}
 \maketitle
 
 \begin{abstract}
-Screening patients against the eligibility criteria of clinical trials is slow, manual work. We study whether a small, locally executable decoder Transformer can make criterion-level eligibility judgements and cite the patient-note sentences that support them. Using the TrialGPT Criterion Annotations dataset with a fixed patient-grouped split (37/8/8 patients), we fine-tune Qwen2.5-1.5B-Instruct with LoRA to emit a structured label and supporting sentence IDs. On the untouched test split (206 criteria) accuracy rises from 0.325 to 0.743, macro-F1 from 0.256 to 0.545 and evidence micro-F1 from 0.123 to 0.508. We re-implement the model's forward pass from its weights, with an explicit pre-allocated key/value cache, a tiled online-softmax attention kernel and greedy speculative decoding with a fine-tuned 0.5B draft model, and verify each against a reference path token-by-token. On a T4 GPU, KV caching gives up to 4.1$\times$ lower latency for 512-token prompts; tiled attention uses 13$\times$ less memory than explicit attention at 2048 tokens but runs 9$\times$ slower in pure PyTorch; speculative decoding is exact in all 72 runs but gains at most 1.07$\times$, while on a CPU, where decoding is bandwidth bound, it gains more. A batched ragged-cache decoder screens a 21-criterion trial 3.6$\times$ faster on a laptop CPU. Everything is exposed in a browser application that produces auditable screening reports. The system is an educational prototype, not a clinical decision tool.
+Screening patients against the eligibility criteria of clinical trials is slow, manual work. We study whether a small, locally executable decoder Transformer can make criterion-level eligibility judgements and cite the patient-note sentences that support them. Using the TrialGPT Criterion Annotations dataset with a fixed patient-grouped split (37/8/8 patients), we fine-tune Qwen2.5-1.5B-Instruct with LoRA to emit a structured label and supporting sentence IDs. On the untouched test split (206 criteria) accuracy rises from 0.325 to 0.743, macro-F1 from 0.256 to 0.545 and evidence micro-F1 from 0.123 to 0.508. We re-implement the model's forward pass from its weights, with an explicit pre-allocated key/value cache, a tiled online-softmax attention kernel and greedy speculative decoding with a fine-tuned 0.5B draft model, and verify each against a reference path token-by-token. On a T4 GPU, KV caching gives up to 4.1$\times$ lower latency for 512-token prompts; tiled attention uses 13$\times$ less memory than explicit attention at 2048 tokens but runs 9$\times$ slower in pure PyTorch; speculative decoding is exact in all 96 runs but gains at most 1.07$\times$ on the GPU, against up to 1.27$\times$ on a CPU, where decoding is bandwidth bound. A batched decoder with per-row cache lengths screens a 21-criterion trial 4.2$\times$ faster on a laptop CPU. Everything is exposed in a browser application that produces auditable screening reports. The system is an educational prototype, not a clinical decision tool.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -78,7 +78,7 @@ Table~\ref{tab:models} compares the candidates. The deciding constraints were: t
 \label{tab:models}
 \centering\footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}lrrrrll@{}}
+\resizebox{\columnwidth}{!}{\begin{tabular}{@{}lrrrrll@{}}
 \toprule
 Model & Params & Layers & Q/KV heads & fp16 & Licence & Role\\
 \midrule
@@ -88,7 +88,7 @@ Qwen2.5-3B-Instr. & 3.09B & 36 & 16/2 & 6.2\,GB & Qwen research & rejected\\
 Llama-3.2-1B-Instr. & 1.24B & 16 & 32/8 & 2.5\,GB & Llama 3.2 (gated) & rejected\\
 Llama-3.2-3B-Instr. & 3.21B & 28 & 24/8 & 6.4\,GB & Llama 3.2 (gated) & rejected\\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \subsection{Input/Output Format and Tokenization}
@@ -199,7 +199,7 @@ Table~\ref{tab:main} compares the same model, prompt and greedy decoding before 
 \label{tab:main}
 \centering\footnotesize
 \setlength{\tabcolsep}{3pt}
-\begin{tabular}{@{}llrrrrr@{}}
+\resizebox{\columnwidth}{!}{\begin{tabular}{@{}llrrrrr@{}}
 \toprule
 Split & Model / subset & Acc & Macro-F1 & Ev.\ $\mu$F1 & Ev.\ MF1 & Ev.\ F1$_{ne}$\\
 \midrule
@@ -213,7 +213,7 @@ Split & Model / subset & Acc & Macro-F1 & Ev.\ $\mu$F1 & Ev.\ MF1 & Ev.\ F1$_{ne
  & LoRA, inclusion & 0.787 & 0.424 & 0.594 & 0.670 & 0.671\\
  & LoRA, exclusion & 0.718 & 0.433 & 0.158 & 0.895 & 0.143\\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \begin{figure*}[t]
@@ -252,7 +252,7 @@ In the application, every one of these cases is traceable: each row links its la
 \toprule
 Category & Count\\
 \midrule
-Missing information read as a negative finding (NEI$\rightarrow$not exc./not inc.) & 28\\
+Missing information read as negative (NEI$\rightarrow$not exc./inc.) & 28\\
 Missed \emph{not applicable} & 11\\
 Cited evidence yet answered NEI (contradictory) & 6\\
 Answered NEI although note decides the criterion & 5\\
@@ -317,7 +317,7 @@ Prompt & New & Equal & No-cache s & KV s & Speed-up & Mem$_{nc}$ & Mem$_{kv}$\\
 \subsection{Speculative Decoding}
 The output of speculative decoding was token-identical to target-only greedy decoding in \textbf{all 72 GPU runs}, and in unit tests with a deliberately perturbed draft that forces rejections at $k\in\{1,3,5\}$. Table~\ref{tab:spec} and Fig.~\ref{fig:spec} summarise the T4 results. Fine-tuning the draft is decisive for this task: on criterion prompts the LoRA draft's proposals are accepted 97--98\% of the time, against 70--80\% for the base draft. The target then advances 3.8--4.0 tokens per pass at $k\ge4$, yet wall-clock speed-up is only 1.03--1.07$\times$. With the base draft, or on free text (acceptance 0.49--0.72), speculative decoding is 11--36\% \emph{slower}. Its peak extra memory is 7\,MiB higher (two caches), plus 1\,GB for the draft weights.
 
-The reason is the cost ratio. Speculative decoding pays off when a draft step is much cheaper than a target step. On a T4 at batch 1 both models are launch-bound: the 0.5B draft has 24 layers against the target's 28, so a draft step costs about 80\% of a target step even though it has a third of the parameters. On the laptop CPU, decoding is memory-bandwidth bound and step cost scales with the bytes of weights read (2\,GB vs.\ 6.2\,GB in fp32). The same algorithm then gives \textbf{CPUSPEC} (Table~\ref{tab:spec}). The speed-up is a property of the hardware regime, not only of the acceptance rate.
+The reason is the cost ratio. Speculative decoding pays off when a draft step is much cheaper than a target step. On a T4 at batch 1 both models are launch-bound: the 0.5B draft has 24 layers against the target's 28, so a draft step costs about 80\% of a target step even though it has a third of the parameters. On the laptop CPU, decoding is memory-bandwidth bound and step cost scales with the bytes of weights read (2\,GB vs.\ 6.2\,GB in fp32). The same algorithm then gives a 1.17$\times$ speed-up on criterion prompts with the LoRA draft at $k=4$, and 1.23--1.27$\times$ on free text even with only 59--73\% acceptance, where the T4 was 12--36\% slower (Table~\ref{tab:spec}). Outputs were identical in all 24 CPU runs. The speed-up is a property of the hardware regime, not only of the acceptance rate.
 
 \begin{table}[t]
 \caption{Speculative decoding (mean over prompts; acceptance = accepted / drafted). T4 fp16 median of 3; CPU (i7-1255U, fp32) median of 2.}
@@ -334,12 +334,12 @@ Prompts & Draft & $k$ & Accept & Tok/pass & Speed-up & Equal\\
  & LoRA 0.5B & 4 & 0.97 & 3.82 & \textbf{1.07} & 10/10\\
 \midrule
 \multirow{2}{*}{Free text (2)} & base 0.5B & 4 & 0.58 & 3.24 & 0.75 & 2/2\\
- & LoRA 0.5B & 4 & 0.61 & 3.33 & 0.77 & 2/2\\
+ & LoRA 0.5B & 4 & 0.61 & 3.33 & \textbf{1.27} & 2/2\\
 \midrule
-\multirow{2}{*}{CPU, criterion (4)} & base 0.5B & 4 & 0.61 & 2.61 & 0.98 & 4/4\
- & LoRA 0.5B & 4 & 1.00 & 3.85 & 	extbf{1.17} & 4/4\
-\multirow{2}{*}{CPU, free text (2)} & base 0.5B & 4 & 0.59 & 3.28 & 1.24 & 2/2\
- & LoRA 0.5B & 4 & 0.61 & 3.33 & 	extbf{1.27} & 2/2\
+\multirow{2}{*}{CPU, criterion (4)} & base 0.5B & 4 & 0.61 & 2.61 & 0.98 & 4/4\\
+ & LoRA 0.5B & 4 & 1.00 & 3.85 & \textbf{1.17} & 4/4\\
+\multirow{2}{*}{CPU, free text (2)} & base 0.5B & 4 & 0.59 & 3.28 & 1.24 & 2/2\\
+ & LoRA 0.5B & 4 & 0.61 & 3.33 & \textbf{1.27} & 2/2\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -352,12 +352,18 @@ Prompts & Draft & $k$ & Accept & Tok/pass & Speed-up & Equal\\
 \end{figure*}
 
 \subsection{Batched Screening on CPU}
-We screened one validation patient against a 21-criterion trial (mean prompt 357 tokens, of which 238 are shared) on the laptop CPU, one run per method because each takes minutes. Sequential KV decoding took 255\,s. Sequential decoding with prefix reuse took 198\,s (1.29$	imes$): the shared note is prefilled once instead of 21 times. Batched decoding took 	extbf{61\,s (4.2$	imes$)}: 43.5\,s of prefill and 17.4\,s for 16 decoding steps. One step for all 21 rows costs about 1.1\,s, against 0.5\,s for a single row, because a CPU decoding step mostly streams the 6.2\,GB of fp32 weights from memory and that cost is shared across rows. All three methods produced identical outputs for all 21 criteria. We also tried bf16 weights (prefill 5$	imes$ slower: this CPU lacks native bf16 matrix units) and PyTorch dynamic int8 quantisation (slower, and 0/8 outputs matched fp32), and rejected both.
+We screened one validation patient against a 21-criterion trial (mean prompt 357 tokens, of which 238 are shared) on the laptop CPU, one run per method because each takes minutes. Sequential KV decoding took 255\,s. Sequential decoding with prefix reuse took 198\,s (1.29$\times$): the shared note is prefilled once instead of 21 times. Batched decoding took \textbf{61\,s (4.2$\times$)}: 43.5\,s of prefill and 17.4\,s for 16 decoding steps. One step for all 21 rows costs about 1.1\,s, against 0.5\,s for a single row, because a CPU decoding step mostly streams the 6.2\,GB of fp32 weights from memory and that cost is shared across rows. All three methods produced identical outputs for all 21 criteria. We also tried bf16 weights (prefill 5$\times$ slower: this CPU lacks native bf16 matrix units) and PyTorch dynamic int8 quantisation (slower, and 0/8 outputs matched fp32), and rejected both.
 
 \subsection{Application}
 Fig.~\ref{fig:app} shows the screening view and the inference lab. On the laptop, the application loads the merged model in about 15\,s, screens a 10-criterion trial in about 33\,s with batched decoding, and reproduces the evaluation script's predictions exactly (CPU fp32 vs.\ GPU fp16) on the checked examples. In a single lab run on one 369-token criterion prompt, uncached decoding took 76.8\,s, cached 13.1\,s, \code{generate()} 10.5\,s and speculative decoding with the LoRA draft 8.2\,s, all producing identical tokens.
 
-APPFIG
+\begin{figure*}[t]
+\centering
+\IfFileExists{figures/app_screening.png}{\includegraphics[width=0.49\textwidth]{figures/app_screening.png}}{\fbox{\parbox{0.45\textwidth}{\centering screening screenshot}}}\hfill
+\IfFileExists{figures/app_lab.png}{\includegraphics[width=0.49\textwidth]{figures/app_lab.png}}{\fbox{\parbox{0.45\textwidth}{\centering inference lab screenshot}}}
+\caption{Browser application. Left: screening a validation patient: rule-based outcome, missing information, and per-criterion label, expert label, cited sentence IDs, evidence text and explanation, with downloadable reports. Right: inference lab comparing decoders on the same prompt (token identity, prefill/decode time, throughput, acceptance, cache size).}
+\label{fig:app}
+\end{figure*}
 
 \section{Limitations}
 (1) Small data: 603 training annotations from 37 patients, with minority classes of 8--13 examples. The test split has no \emph{excluded} cases, so that class is untested and the 8-patient test set gives wide confidence intervals. (2) The model has not learned \emph{not included} and under-detects \emph{not applicable}; it also tends to read missing information as \emph{not excluded}, which in a real screening tool would wrongly keep ineligible patients in the pool. (3) Exclusion evidence recall is low (0.09). (4) Explanations are templated from the cited sentences. This is faithful by construction but not a reasoning trace, because the dataset's only free-text explanations are GPT-4 outputs, which we may not use. (5) Patient notes are short synthetic case descriptions, unlike real EHR text. (6) The tiled kernel is unfused and slow, and our decoders run at batch size 1 apart from per-patient batching. (7) The patient--trial outcome is a rule-based aggregation, not a validated eligibility decision. \textbf{The system is an educational screening prototype and must not be used for clinical enrollment.}
@@ -371,9 +377,18 @@ A 1.5B open model with LoRA, trained in 16 minutes on a free GPU, reaches 0.743 
 
 \appendices
 \section{Use of AI Assistants}
-The implementation, experiments and this report were produced with the help of an AI coding assistant (Anthropic Claude, via Claude Code), which wrote most of the code and draft text under the author's direction. The author chose the overall approach, ran all training and benchmark jobs on Kaggle, checked results against the assignment rubric, and is responsible for every claim. All AI-written code was tested (36+ unit tests comparing the manual model, cache, attention kernels and speculative decoder with reference implementations), and all numbers in this report come from logged result files in the repository. Several issues were found and fixed through these checks: a hidden repetition penalty in the default generation configuration, a GPU out-of-memory configuration, library-version incompatibilities on Kaggle, and an attention ``fp64 ground truth'' that was silently computed in fp32. Hugging Face Transformers, PEFT, PyTorch and Gradio are used as libraries. TrialGPT code was not used.
+The implementation, experiments and this report were produced with the help of an AI coding assistant (Anthropic Claude, via Claude Code), which wrote most of the code and draft text under the author's direction. The author chose the overall approach, ran all training and benchmark jobs on Kaggle, checked results against the assignment rubric, and is responsible for every claim. All AI-written code was tested (40 unit tests comparing the manual model, cache, attention kernels and speculative decoder with reference implementations), and all numbers in this report come from logged result files in the repository. Several issues were found and fixed through these checks: a hidden repetition penalty in the default generation configuration, a GPU out-of-memory configuration, library-version incompatibilities on Kaggle, and an attention ``fp64 ground truth'' that was silently computed in fp32. Hugging Face Transformers, PEFT, PyTorch and Gradio are used as libraries. TrialGPT code was not used.
 
 \section{Reproducibility}
-Code: \url{https://github.com/ibrahimmlk/trialsieve}. Adapters: \url{https://huggingface.co/ibrahimmlk/trialsieve-qwen2.5-1.5b-lora} and \url{https://huggingface.co/ibrahimmlk/trialsieve-qwen2.5-0.5b-draft-lora}. Split: \code{python scripts/make\_split.py} (manifest in \code{data/splits/split\_manifest.json}). Training and GPU evaluation: \code{notebooks/kaggle\_finetune.ipynb} and \code{notebooks/kaggle\_benchmarks\_final.ipynb}. Tests: \code{pytest tests}. Figures: \code{python scripts/make\_figures.py}. Application: \code{run\_app.bat}.
+{\raggedright\footnotesize
+\begin{itemize}
+\item Code: \url{https://github.com/ibrahimmlk/trialsieve}
+\item Target adapter: \url{https://huggingface.co/ibrahimmlk/trialsieve-qwen2.5-1.5b-lora}
+\item Draft adapter: \url{https://huggingface.co/ibrahimmlk/trialsieve-qwen2.5-0.5b-draft-lora}
+\item Split and manifest: \code{python scripts/make\_split.py} $\rightarrow$ \code{data/splits/split\_manifest.json}
+\item Training and GPU evaluation: \code{notebooks/kaggle\_finetune.ipynb}, \code{notebooks/kaggle\_benchmarks\_final.ipynb}
+\item Tests: \code{pytest tests}; figures: \code{python scripts/make\_figures.py}; error analysis: \code{python scripts/error\_analysis.py}
+\item Application: double-click \code{run\_app.bat} (opens \url{http://127.0.0.1:7860})
+\end{itemize}}
 
 \end{document}
