@@ -1,0 +1,123 @@
+{
+  "env": {
+    "device": "Tesla T4",
+    "dtype": "torch.float16",
+    "torch": "2.11.0+cu130",
+    "repeats": 3,
+    "statistic": "median after 1 warm-up"
+  },
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "adapter": "outputs/lora-qwen1.5b/final",
+  "rows": [
+    {
+      "annotation_id": 0,
+      "prompt_tokens": 369,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.7762886389998584,
+        "tiled": 1.6777724329999728,
+        "sdpa": 0.6037975239999014
+      }
+    },
+    {
+      "annotation_id": 1,
+      "prompt_tokens": 348,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.6966880819998096,
+        "tiled": 1.628159721999964,
+        "sdpa": 0.5897910139999567
+      }
+    },
+    {
+      "annotation_id": 2,
+      "prompt_tokens": 354,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.693186366999953,
+        "tiled": 1.6007775029997902,
+        "sdpa": 0.5938365530000738
+      }
+    },
+    {
+      "annotation_id": 3,
+      "prompt_tokens": 369,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.6974185829999442,
+        "tiled": 1.6504992669999865,
+        "sdpa": 0.5943251090000103
+      }
+    },
+    {
+      "annotation_id": 4,
+      "prompt_tokens": 355,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.6974127379999118,
+        "tiled": 1.5973514949998844,
+        "sdpa": 0.5913176740000381
+      }
+    },
+    {
+      "annotation_id": 5,
+      "prompt_tokens": 364,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.7448594790000698,
+        "tiled": 1.6990908650000165,
+        "sdpa": 0.6213955620000888
+      }
+    },
+    {
+      "annotation_id": 6,
+      "prompt_tokens": 356,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.7093125700000655,
+        "tiled": 1.594744367999965,
+        "sdpa": 0.6251929129998643
+      }
+    },
+    {
+      "annotation_id": 7,
+      "prompt_tokens": 358,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.6999036350000551,
+        "tiled": 1.6133619740000995,
+        "sdpa": 0.5899163040000985
+      }
+    },
+    {
+      "annotation_id": 8,
+      "prompt_tokens": 351,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.7047517410001092,
+        "tiled": 1.6514421459999085,
+        "sdpa": 0.587074432999998
+      }
+    },
+    {
+      "annotation_id": 9,
+      "prompt_tokens": 352,
+      "tiled_equals_reference": true,
+      "sdpa_equals_reference": true,
+      "seconds": {
+        "reference": 0.7008155729999999,
+        "tiled": 1.6063405089998923,
+        "sdpa": 0.590305914000055
+      }
+    }
+  ]
+}

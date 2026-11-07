@@ -334,11 +334,11 @@
     "model": "Qwen/Qwen2.5-1.5B-Instruct",
     "adapter": null,
     "split": "val",
-    "decoding": "greedy",
+    "decoding": "greedy (repetition_penalty=1.0; Qwen default 1.1 overridden)",
     "max_new_tokens": 64,
     "dtype": "torch.float16",
     "device": "cuda",
     "n": 206,
-    "seconds": 30.164905071258545
+    "seconds": 30.601665019989014
   }
 }

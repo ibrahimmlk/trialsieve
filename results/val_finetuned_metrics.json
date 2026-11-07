@@ -3,7 +3,7 @@
     "classification": {
       "n": 206,
       "accuracy": 0.7330097087378641,
-      "macro_f1": 0.43184937382055244,
+      "macro_f1": 0.4312327293530866,
       "per_class": {
         "included": {
           "precision": 0.78125,
@@ -24,9 +24,9 @@
           "support": 2
         },
         "not excluded": {
-          "precision": 0.7633587786259542,
+          "precision": 0.7575757575757576,
           "recall": 0.9900990099009901,
-          "f1": 0.8620689655172413,
+          "f1": 0.8583690987124464,
           "support": 101
         },
         "not enough information": {
@@ -49,8 +49,7 @@
           "excluded",
           "not excluded",
           "not enough information",
-          "not applicable",
-          "invalid output"
+          "not applicable"
         ],
         "matrix": [
           [
@@ -59,7 +58,6 @@
             0,
             0,
             10,
-            0,
             0
           ],
           [
@@ -68,7 +66,6 @@
             0,
             0,
             2,
-            0,
             0
           ],
           [
@@ -76,7 +73,6 @@
             0,
             0,
             2,
-            0,
             0,
             0
           ],
@@ -86,44 +82,31 @@
             0,
             100,
             0,
-            1,
-            0
-          ],
-          [
-            6,
-            0,
-            0,
-            23,
-            21,
-            2,
             1
           ],
           [
-            0,
-            0,
-            0,
             6,
-            1,
-            5,
-            0
+            0,
+            0,
+            24,
+            21,
+            2
           ],
           [
             0,
             0,
             0,
-            0,
-            0,
-            0,
-            0
+            6,
+            1,
+            5
           ]
         ]
       },
-      "invalid_outputs": 1,
+      "invalid_outputs": 0,
       "pred_distribution": {
         "not enough information": 34,
         "included": 32,
-        "not excluded": 131,
-        "invalid output": 1,
+        "not excluded": 132,
         "not applicable": 8
       }
     },
@@ -252,7 +235,7 @@
     "classification": {
       "n": 140,
       "accuracy": 0.75,
-      "macro_f1": 0.3470961887477314,
+      "macro_f1": 0.3461712220465326,
       "per_class": {
         "excluded": {
           "precision": 0.0,
@@ -261,9 +244,9 @@
           "support": 2
         },
         "not excluded": {
-          "precision": 0.7633587786259542,
+          "precision": 0.7575757575757576,
           "recall": 0.9900990099009901,
-          "f1": 0.8620689655172413,
+          "f1": 0.8583690987124464,
           "support": 101
         },
         "not enough information": {
@@ -284,14 +267,12 @@
           "excluded",
           "not excluded",
           "not enough information",
-          "not applicable",
-          "invalid output"
+          "not applicable"
         ],
         "matrix": [
           [
             0,
             2,
-            0,
             0,
             0
           ],
@@ -299,36 +280,25 @@
             0,
             100,
             0,
-            1,
-            0
+            1
           ],
           [
             0,
-            23,
+            24,
             0,
-            2,
-            1
+            2
           ],
           [
             0,
             6,
             0,
-            5,
-            0
-          ],
-          [
-            0,
-            0,
-            0,
-            0,
-            0
+            5
           ]
         ]
       },
-      "invalid_outputs": 1,
+      "invalid_outputs": 0,
       "pred_distribution": {
-        "not excluded": 131,
-        "invalid output": 1,
+        "not excluded": 132,
         "not applicable": 8
       }
     },
@@ -361,11 +331,11 @@
     "model": "Qwen/Qwen2.5-1.5B-Instruct",
     "adapter": "outputs/lora-qwen1.5b/final",
     "split": "val",
-    "decoding": "greedy",
+    "decoding": "greedy (repetition_penalty=1.0; Qwen default 1.1 overridden)",
     "max_new_tokens": 64,
     "dtype": "torch.float16",
     "device": "cuda",
     "n": 206,
-    "seconds": 25.639132022857666
+    "seconds": 24.376306533813477
   }
 }
