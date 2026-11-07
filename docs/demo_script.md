@@ -1,4 +1,4 @@
-# TrialSieve: 5-minute demo video script
+# Demo video script (5 minutes): criterion-level clinical-trial screening system
 
 Target length: about 5 minutes; the limit is 5–7. The optional segment brings it to about 6.
 Columns: **time · what you do on screen · what you say.** Read the "say" text naturally; don't recite it.
@@ -57,7 +57,7 @@ Outcome: **Needs review (insufficient information)**, about 35 s on the laptop.
 
 | Time | On screen | Say |
 |---|---|---|
-| **0:00–0:20** | Browser on the *Screen a patient* tab, nothing filled in. | "This is TrialSieve, my Generative AI assignment. It screens a patient against a clinical trial's eligibility criteria one criterion at a time, and cites the sentences of the patient note that support each decision. It runs Qwen 2.5 1.5B, fine-tuned with LoRA, entirely on this laptop's CPU. It's an educational prototype, not a clinical decision tool." |
+| **0:00–0:20** | Browser on the *Screen a patient* tab, nothing filled in. | "This is my Generative AI assignment: a system that screens a patient against a clinical trial's eligibility criteria one criterion at a time, and cites the sentences of the patient note that support each decision. It runs Qwen 2.5 1.5B, fine-tuned with LoRA, entirely on this laptop's CPU. It's an educational prototype, not a clinical decision tool." |
 | **0:20–0:35** | Alt-Tab to the black `run_app.bat` window for 2 seconds, then back. | "It starts with a double-click on run_app.bat. No notebook or IDE needed, and it works offline once the models are downloaded." |
 | **0:35–0:55** | Paste the **note**, the **inclusion** and the **exclusion** criteria from Notepad. | "This patient note and these criteria are new; they're not in the dataset. The note is plain free text: the app splits it into numbered sentences, because the model answers with sentence IDs as evidence." |
 | **0:55–1:35** | Click **Screen patient**. Talk while the progress bar runs (about 35 s). | "Every criterion becomes a prompt with the note, the criterion type and the label set. The model must answer in JSON with a label and the supporting sentence IDs. The labels keep the dataset's categories, including *not enough information* and *not applicable*, so they're never forced into yes or no. To make this fast on a CPU, I wrote my own Transformer forward pass with a key-value cache. The note is processed once, and then all seven criteria are decoded together in one batch, each row of the cache with its own length. On this laptop that's four times faster than one criterion at a time." |
