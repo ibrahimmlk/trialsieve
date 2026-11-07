@@ -55,20 +55,38 @@ def greedy_no_cache(model, prompt, max_new_tokens, eos_ids=(), **_):
     return _finish(out, {"mode": "no_cache"}, prefill_s, time.perf_counter() - t0 - prefill_s, dev, mem0)
 
 
-def greedy_kv(model, prompt, max_new_tokens, eos_ids=(), **_):
-    """Prefill the prompt once into the KV cache, then feed one token per step at position cache.length."""
+def greedy_kv(model, prompt, max_new_tokens, eos_ids=(), prefix_state=None, **_):
+    """Prefill the prompt once into the KV cache, then feed one token per step at position cache.length.
+
+    prefix_state (optional dict) enables prefix reuse across calls: it keeps the previous
+    cache and the tokens it holds. The cache is rolled back to the longest common token
+    prefix with the new prompt (e.g. system prompt + patient note shared by every criterion),
+    and only the remaining prompt tokens are prefilled.
+    """
     dev = model.device
     mem0 = _start_memory(dev)
-    cache = model.new_cache(len(prompt) + max_new_tokens)
+    need = len(prompt) + max_new_tokens
+    reused = 0
+    cache = prefix_state.get("cache") if prefix_state is not None else None
+    if cache is not None and cache.max_len >= need:
+        cached = prefix_state["tokens"][: cache.length]
+        while reused < min(len(cached), len(prompt) - 1) and cached[reused] == prompt[reused]:
+            reused += 1  # keep >= 1 prompt token to feed, so the last position yields logits
+        cache.rollback(reused)
+    else:
+        # Without reuse allocate exactly what is needed (keeps benchmark memory honest).
+        cache = model.new_cache(max(need, 2048) if prefix_state is not None else need)
     _sync(dev); t0 = time.perf_counter()
-    nxt = int(model.forward(torch.tensor([prompt], device=dev), cache, last_only=True)[0, -1].argmax())
+    nxt = int(model.forward(torch.tensor([prompt[reused:]], device=dev), cache, last_only=True)[0, -1].argmax())
     _sync(dev); prefill_s = time.perf_counter() - t0
     out = [nxt]
     while len(out) < max_new_tokens and nxt not in eos_ids:
         nxt = int(model.forward(torch.tensor([[nxt]], device=dev), cache, last_only=True)[0, -1].argmax())
         out.append(nxt)
     _sync(dev)
-    stats = {"mode": "kv_cache", "cache_len": cache.length, "cache_bytes": cache.nbytes()}
+    if prefix_state is not None:
+        prefix_state["cache"], prefix_state["tokens"] = cache, list(prompt) + out[:-1]
+    stats = {"mode": "kv_cache", "cache_len": cache.length, "cache_bytes": cache.nbytes(), "reused_prefix_tokens": reused}
     return _finish(out, stats, prefill_s, time.perf_counter() - t0 - prefill_s, dev, mem0)
 
 
