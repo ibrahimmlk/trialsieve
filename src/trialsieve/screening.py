@@ -123,20 +123,36 @@ def aggregate(results):
     """Explicit rule-based patient-trial outcome (the dataset has no trial-level ground truth)."""
     failing = [r for r in results if (r["type"], r["label"]) in {("inclusion", "not included"), ("exclusion", "excluded")}]
     unknown = [r for r in results if r["label"] in ("not enough information", "invalid output")]
+    set_aside = [r for r in results if r["label"] == "not applicable"]
+    # Ignoring N/A criteria is only safe when few are set aside: a model that labels most criteria
+    # N/A would otherwise produce "potentially eligible" without having checked anything.
+    mostly_na = len(set_aside) > len(results) / 2
     if failing:
         verdict = "Likely ineligible"
         reason = f"{len(failing)} criterion/criteria failed (inclusion not met or exclusion met)."
     elif unknown:
         verdict = "Needs review (insufficient information)"
         reason = f"No criterion failed, but {len(unknown)} could not be decided from the note."
+    elif mostly_na:
+        verdict = "Needs review (most criteria judged not applicable)"
+        reason = "No criterion failed, but most criteria were set aside as not applicable, so too few were checked."
     else:
         verdict = "Potentially eligible"
         reason = "Every applicable inclusion criterion is met and no exclusion criterion is met."
-    return {"verdict": verdict, "reason": reason,
+    warning = None
+    if set_aside:
+        checked = len(results) - len(set_aside)
+        warning = (f"{len(set_aside)} of {len(results)} criteria were judged not applicable and ignored; "
+                   f"the outcome rests on the remaining {checked}.")
+        if mostly_na:
+            warning += " Most criteria were set aside, so do not rely on this outcome without manual review."
+    return {"verdict": verdict, "reason": reason, "warning": warning,
             "rule": "Ineligible if any inclusion = 'not included' or any exclusion = 'excluded'; otherwise "
-                    "'needs review' if any criterion is 'not enough information' or invalid; otherwise potentially "
-                    "eligible. 'not applicable' criteria are ignored.",
-            "failing": [r["index"] for r in failing], "missing_information": [r["criterion"] for r in unknown]}
+                    "'needs review' if any criterion is 'not enough information' or invalid, or if more than half "
+                    "of the criteria are 'not applicable'; otherwise potentially eligible. 'not applicable' "
+                    "criteria are otherwise ignored.",
+            "failing": [r["index"] for r in failing], "missing_information": [r["criterion"] for r in unknown],
+            "not_applicable": [r["index"] for r in set_aside]}
 
 
 class Engine:
@@ -294,13 +310,14 @@ def report_html(rep, title="Eligibility screening report"):
     note = "".join(f"<li value='{i}'>{e(s)}</li>" for i, s in rep["sentences"].items())
     s = rep["summary"]
     missing = "".join(f"<li>{e(m)}</li>" for m in s["missing_information"]) or "<li>None</li>"
+    warn = f"<p class='warn'><b>Caution:</b> {e(s['warning'])}</p>" if s.get("warning") else ""
     prov = "".join(f"<tr><th>{e(k)}</th><td>{e(str(v))}</td></tr>" for k, v in {**rep["provenance"], **rep["settings"]}.items())
     return f"""<!doctype html><html><head><meta charset="utf-8"><title>{e(title)}</title>
 <style>body{{font-family:system-ui,sans-serif;max-width:1000px;margin:24px auto;padding:0 16px;color:#1a1a1a}}
 table{{border-collapse:collapse;width:100%;margin:12px 0}}td,th{{border:1px solid #ccc;padding:6px;vertical-align:top;text-align:left;font-size:14px}}
 .warn{{background:#fff4e5;border:1px solid #f0a020;padding:10px;border-radius:6px}}ol li{{margin:2px 0}}</style></head><body>
 <h1>{e(title)}</h1><p class="warn"><b>Notice:</b> {e(rep['disclaimer'])}</p>
-<h2>Preliminary outcome: {e(s['verdict'])}</h2><p>{e(s['reason'])}</p><p><i>Aggregation rule:</i> {e(s['rule'])}</p>
+<h2>Preliminary outcome: {e(s['verdict'])}</h2><p>{e(s['reason'])}</p>{warn}<p><i>Aggregation rule:</i> {e(s['rule'])}</p>
 <h3>Missing information</h3><ul>{missing}</ul>
 <h2>Criterion-level results</h2><table><tr><th>#</th><th>Type</th><th>Criterion</th><th>Label</th><th>Evidence IDs</th><th>Explanation</th></tr>{rows}</table>
 <h2>Patient note (sentence IDs)</h2><ol start="0">{note}</ol>

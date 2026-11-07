@@ -70,11 +70,12 @@ def verdict_html(rep, gold_hits):
     color = {"Likely ineligible": "#c62828", "Potentially eligible": "#2e7d32"}.get(s["verdict"], "#b26a00")
     missing = "".join(f"<li>{html.escape(m)}</li>" for m in s["missing_information"][:12])
     gold = f"<p><b>Agreement with expert labels (validation example):</b> {gold_hits}</p>" if gold_hits else ""
+    warn = f"<p><b>Caution:</b> {html.escape(s['warning'])}</p>" if s.get("warning") else ""
     p = rep["provenance"]
     return f"""
 <div style="border-left:6px solid {color};padding:10px 14px;border-radius:6px;background:rgba(127,127,127,.08)">
 <div style="font-size:1.4em;font-weight:700;color:{color}">Preliminary outcome: {s['verdict']}</div>
-<p>{s['reason']}</p><p style="font-size:.9em"><i>Rule:</i> {s['rule']}</p>
+<p>{s['reason']}</p>{warn}<p style="font-size:.9em"><i>Rule:</i> {s['rule']}</p>
 {'<p><b>Missing information:</b></p><ul>' + missing + '</ul>' if missing else ''}{gold}
 <p style="font-size:.85em">Runtime {p['runtime_s']} s · note {p['note_tokens']} tokens · mode {rep['settings']['decoding']} ·
 attention {rep['settings']['attention']} · model {'fine-tuned (LoRA)' if rep['settings']['fine_tuned_adapter'] else 'base (no fine-tuning)'}</p>
