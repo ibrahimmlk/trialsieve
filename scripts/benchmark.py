@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 from trialsieve.attention import ATTENTION, reference_attention  # noqa: E402
 from trialsieve.data import load_split, messages  # noqa: E402
-from trialsieve.decoding import greedy_kv, greedy_no_cache, speculative  # noqa: E402
+from trialsieve.decoding import greedy_kv, greedy_kv_batch, greedy_no_cache, speculative  # noqa: E402
 from trialsieve.manual_model import ManualQwen2  # noqa: E402
 
 FILLER = ("The patient reports intermittent chest discomfort, fatigue and shortness of breath on exertion. "
@@ -146,9 +146,30 @@ def bench_speculative(target, drafts, tok, args):
     return rows
 
 
+def bench_batch(model, tok, args):
+    """Screening one patient-trial pair: sequential vs prefix-reuse vs batched ragged KV decoding."""
+    from trialsieve.screening import validation_examples
+    g = list(validation_examples().values())[0]
+    crit = [("inclusion", c) for c in g["inclusion"]] + [("exclusion", c) for c in g["exclusion"]]
+    prompts = [chat_ids(tok, messages({"note": g["note"], "criterion_type": t, "criterion_text": c})) for t, c in crit]
+    t0 = time.perf_counter()
+    seq = [greedy_kv(model, p, 64, eos_ids=args.eos)[0] for p in prompts]
+    t_seq = time.perf_counter() - t0
+    state, t0 = {}, time.perf_counter()
+    reuse = [greedy_kv(model, p, 64, eos_ids=args.eos, prefix_state=state)[0] for p in prompts]
+    t_reuse = time.perf_counter() - t0
+    batched, st = greedy_kv_batch(model, prompts, 64, eos_ids=args.eos)
+    row = {"criteria": len(prompts), "prompt_tokens_mean": sum(map(len, prompts)) / len(prompts),
+           "shared_prefix_tokens": st["shared_prefix_tokens"], "sequential_s": t_seq, "prefix_reuse_s": t_reuse,
+           "batched_s": st["total_s"], "batched_prefill_s": st["prefill_s"], "batched_decode_s": st["decode_s"],
+           "reuse_equal": reuse == seq, "batched_equal": batched == seq}
+    print(f"[batch] {row}", flush=True)
+    return [row]
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--part", choices=["kv", "attention", "speculative", "all"], default="all")
+    ap.add_argument("--part", choices=["kv", "attention", "speculative", "batch", "all"], default="all")
     ap.add_argument("--model", default="Qwen/Qwen2.5-1.5B-Instruct")
     ap.add_argument("--adapter", default=None)
     ap.add_argument("--draft-model", default="Qwen/Qwen2.5-0.5B-Instruct")
@@ -183,6 +204,8 @@ def main():
         save("kv_cache", bench_kv(target, tok, args), model=args.model, adapter=args.adapter)
     if args.part in ("attention", "all"):
         save("attention_e2e", bench_attention_e2e(target, tok, args), model=args.model, adapter=args.adapter)
+    if args.part == "batch":
+        save("batched_screening", bench_batch(target, tok, args), model=args.model, adapter=args.adapter)
     if args.part in ("speculative", "all"):
         drafts = {"base-0.5b": ManualQwen2(load(args.draft_model, None, dtype, device))}
         if args.draft_adapter:
