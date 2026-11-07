@@ -1,0 +1,403 @@
+{
+  "split": "test",
+  "tag": "finetuned",
+  "n": 206,
+  "categories": {
+    "absence_as_negative": {
+      "title": "Missing information read as a negative finding",
+      "count": 28,
+      "examples": [
+        {
+          "annotation_id": 169,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02097186",
+          "criterion_type": "exclusion",
+          "criterion_text": "Patients with an estimated pre-operative glomerular filtration rate < 30mls/min/1.73m2",
+          "gold_label": "not enough information",
+          "label": "not excluded",
+          "gold_evidence": [],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not excluded\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {}
+        },
+        {
+          "annotation_id": 174,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02097186",
+          "criterion_type": "exclusion",
+          "criterion_text": "Patients with previous axillary surgery",
+          "gold_label": "not enough information",
+          "label": "not excluded",
+          "gold_evidence": [],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not excluded\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {}
+        }
+      ]
+    },
+    "overcommit": {
+      "title": "Decided a criterion the experts judged undecidable",
+      "count": 1,
+      "examples": [
+        {
+          "annotation_id": 678,
+          "patient_id": "sigir-20158",
+          "trial_id": "NCT02562040",
+          "criterion_type": "inclusion",
+          "criterion_text": "Diagnosis of mild sleep-disordered breathing (MSDB) defined as meeting all of the following criteria: Caregiver report of habitual snoring that occurs most of the night on at least three nights per week, and has been present for at least three months (on average occurring > 3 nights per week or more half of sleep time)",
+          "gold_label": "not enough information",
+          "label": "included",
+          "gold_evidence": [
+            0
+          ],
+          "evidence": [
+            0
+          ],
+          "raw_output": "{\"label\": \"included\", \"evidence_sentence_ids\": [0]}",
+          "gold_evidence_text": {
+            "0": "A 10 yo boy with nighttime snoring, pauses in breathing, and restlessness with nighttime awakenings."
+          },
+          "pred_evidence_text": {
+            "0": "A 10 yo boy with nighttime snoring, pauses in breathing, and restlessness with nighttime awakenings."
+          }
+        }
+      ]
+    },
+    "contradictory_evidence": {
+      "title": "Cited evidence yet answered 'not enough information'",
+      "count": 6,
+      "examples": [
+        {
+          "annotation_id": 161,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02097186",
+          "criterion_type": "inclusion",
+          "criterion_text": "Patients undergoing elective carotid endarterectomy",
+          "gold_label": "not included",
+          "label": "not enough information",
+          "gold_evidence": [],
+          "evidence": [
+            0,
+            1,
+            2
+          ],
+          "raw_output": "{\"label\": \"not enough information\", \"evidence_sentence_ids\": [0, 1, 2]}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {
+            "0": "A physician is called to see a 67-year-old woman who underwent cardiac catheterization via the right femoral artery earlier in the morning.",
+            "1": "She is now complaining of a cool right foot.",
+            "2": "Upon examination she has a pulsatile mass in her right groin with loss of distal pulses, and auscultation reveals a bruit over the point at which the right femoral artery was entered."
+          }
+        },
+        {
+          "annotation_id": 162,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02097186",
+          "criterion_type": "inclusion",
+          "criterion_text": "Patients undergoing open abdominal aortic aneurysm repair",
+          "gold_label": "not included",
+          "label": "not enough information",
+          "gold_evidence": [],
+          "evidence": [
+            0,
+            1,
+            2
+          ],
+          "raw_output": "{\"label\": \"not enough information\", \"evidence_sentence_ids\": [0, 1, 2]}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {
+            "0": "A physician is called to see a 67-year-old woman who underwent cardiac catheterization via the right femoral artery earlier in the morning.",
+            "1": "She is now complaining of a cool right foot.",
+            "2": "Upon examination she has a pulsatile mass in her right groin with loss of distal pulses, and auscultation reveals a bruit over the point at which the right femoral artery was entered."
+          }
+        }
+      ]
+    },
+    "underconfident": {
+      "title": "Answered 'not enough information' although the note decides the criterion",
+      "count": 5,
+      "examples": [
+        {
+          "annotation_id": 176,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02264964",
+          "criterion_type": "inclusion",
+          "criterion_text": "No medical history of central vena catheterization.",
+          "gold_label": "included",
+          "label": "not enough information",
+          "gold_evidence": [
+            0
+          ],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not enough information\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {
+            "0": "A physician is called to see a 67-year-old woman who underwent cardiac catheterization via the right femoral artery earlier in the morning."
+          },
+          "pred_evidence_text": {}
+        },
+        {
+          "annotation_id": 177,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02264964",
+          "criterion_type": "inclusion",
+          "criterion_text": "Maintenance hemodialysis after central vena catheterization.",
+          "gold_label": "not included",
+          "label": "not enough information",
+          "gold_evidence": [],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not enough information\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {}
+        }
+      ]
+    },
+    "missed_not_applicable": {
+      "title": "Missed a 'not applicable' criterion",
+      "count": 11,
+      "examples": [
+        {
+          "annotation_id": 422,
+          "patient_id": "sigir-201422",
+          "trial_id": "NCT00236912",
+          "criterion_type": "inclusion",
+          "criterion_text": "If female, using birth control",
+          "gold_label": "not applicable",
+          "label": "not enough information",
+          "gold_evidence": [
+            3
+          ],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not enough information\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {
+            "3": "She has had no sexual partners and her menses are regular."
+          },
+          "pred_evidence_text": {}
+        },
+        {
+          "annotation_id": 683,
+          "patient_id": "sigir-20158",
+          "trial_id": "NCT02562040",
+          "criterion_type": "exclusion",
+          "criterion_text": "Previous tonsillectomy, including partial tonsillectomy",
+          "gold_label": "not applicable",
+          "label": "not excluded",
+          "gold_evidence": [],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not excluded\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {}
+        }
+      ]
+    },
+    "wrong_polarity": {
+      "title": "Opposite decision (met vs not met)",
+      "count": 1,
+      "examples": [
+        {
+          "annotation_id": 164,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02097186",
+          "criterion_type": "inclusion",
+          "criterion_text": "Patients undergoing surgical lower limb revascularisation (suprainguinal or infrainguinal)",
+          "gold_label": "not included",
+          "label": "included",
+          "gold_evidence": [],
+          "evidence": [
+            0,
+            2
+          ],
+          "raw_output": "{\"label\": \"included\", \"evidence_sentence_ids\": [0, 2]}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {
+            "0": "A physician is called to see a 67-year-old woman who underwent cardiac catheterization via the right femoral artery earlier in the morning.",
+            "2": "Upon examination she has a pulsatile mass in her right groin with loss of distal pulses, and auscultation reveals a bruit over the point at which the right femoral artery was entered."
+          }
+        }
+      ]
+    },
+    "other_label_error": {
+      "title": "Other label error",
+      "count": 1,
+      "examples": [
+        {
+          "annotation_id": 322,
+          "patient_id": "sigir-201417",
+          "trial_id": "NCT01745731",
+          "criterion_type": "exclusion",
+          "criterion_text": "Pregnant women or women of childbearing age who do not have adequate contraception.",
+          "gold_label": "not excluded",
+          "label": "not applicable",
+          "gold_evidence": [
+            0
+          ],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not applicable\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {
+            "0": "A 48-year-old white male with history of common variable immunodeficiency (CVID) with acute abdominal pain, fever, dehydration, HR of 132 bpm, BP 80/40."
+          },
+          "pred_evidence_text": {}
+        }
+      ]
+    },
+    "correct_label_unsupported": {
+      "title": "Correct label but no evidence cited where experts cited some",
+      "count": 13,
+      "examples": [
+        {
+          "annotation_id": 179,
+          "patient_id": "sigir-201410",
+          "trial_id": "NCT02264964",
+          "criterion_type": "exclusion",
+          "criterion_text": "Had been performed central venous puncture or catheterization before.",
+          "gold_label": "not excluded",
+          "label": "not excluded",
+          "gold_evidence": [
+            0
+          ],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not excluded\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {
+            "0": "A physician is called to see a 67-year-old woman who underwent cardiac catheterization via the right femoral artery earlier in the morning."
+          },
+          "pred_evidence_text": {}
+        },
+        {
+          "annotation_id": 196,
+          "patient_id": "sigir-201411",
+          "trial_id": "NCT01723137",
+          "criterion_type": "exclusion",
+          "criterion_text": "Less than 18 years of age",
+          "gold_label": "not excluded",
+          "label": "not excluded",
+          "gold_evidence": [
+            0
+          ],
+          "evidence": [],
+          "raw_output": "{\"label\": \"not excluded\", \"evidence_sentence_ids\": []}",
+          "gold_evidence_text": {
+            "0": "A 40-year-old woman with no past medical history presents to the ER with excruciating pain in her right arm that had started 1 hour prior to her admission."
+          },
+          "pred_evidence_text": {}
+        }
+      ]
+    },
+    "correct_label_spurious_evidence": {
+      "title": "Correct label but cited sentences the experts did not",
+      "count": 15,
+      "examples": [
+        {
+          "annotation_id": 307,
+          "patient_id": "sigir-201417",
+          "trial_id": "NCT01745731",
+          "criterion_type": "inclusion",
+          "criterion_text": "Patient selection should be cautious, covering basically 5 types of liver damage which must be submitted prior to liver volumetry: Metastatic Disease subsidiary right hepatectomy extended to segment IV Metastatic Disease subsidiary right hepatectomy with suspected diseased liver (neoadjuvant chemotherapy) (in cases of doubt may be used liver function test indocyanine green) Bilobar liver metastases with multiple nodules in the right lobe and more than 3 nodules greater than 30 mm in the left hepatic lobe (LHI) will perform lumpectomies the LHI + right portal branch ligation (or postoperative percutaneous embolization) in order to make right hepatectomy 4-6 weeks (two stage surgery) Subsidiary Hepatocarcinoma extended right hepatectomy Liver Injury benign / malignant (Hemangiomas, hydatid cysts or liver tumors / primary bile hepatoblastoma), which by extension threatens the viability of the remaining liver tissue.",
+          "gold_label": "not enough information",
+          "label": "not enough information",
+          "gold_evidence": [
+            3
+          ],
+          "evidence": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ],
+          "raw_output": "{\"label\": \"not enough information\", \"evidence_sentence_ids\": [0, 1, 2, 3, 4]}",
+          "gold_evidence_text": {
+            "3": "Exploratory laparotomy reveals a ruptured liver abscess, which is then surgically drained."
+          },
+          "pred_evidence_text": {
+            "0": "A 48-year-old white male with history of common variable immunodeficiency (CVID) with acute abdominal pain, fever, dehydration, HR of 132 bpm, BP 80/40.",
+            "1": "The physical examination is remarkable for tenderness and positive Murphy sign.",
+            "2": "Abdominal ultrasound shows hepatomegaly and abundant free intraperitoneal fluid.",
+            "3": "Exploratory laparotomy reveals a ruptured liver abscess, which is then surgically drained.",
+            "4": "After surgery, the patient is taken to the ICU."
+          }
+        },
+        {
+          "annotation_id": 325,
+          "patient_id": "sigir-201417",
+          "trial_id": "NCT02556359",
+          "criterion_type": "inclusion",
+          "criterion_text": "Genetic patients",
+          "gold_label": "not enough information",
+          "label": "not enough information",
+          "gold_evidence": [],
+          "evidence": [
+            0
+          ],
+          "raw_output": "{\"label\": \"not enough information\", \"evidence_sentence_ids\": [0]}",
+          "gold_evidence_text": {},
+          "pred_evidence_text": {
+            "0": "A 48-year-old white male with history of common variable immunodeficiency (CVID) with acute abdominal pain, fever, dehydration, HR of 132 bpm, BP 80/40."
+          }
+        }
+      ]
+    },
+    "correct_label_incomplete_evidence": {
+      "title": "Correct label but missed some expert evidence sentences",
+      "count": 2,
+      "examples": [
+        {
+          "annotation_id": 420,
+          "patient_id": "sigir-201422",
+          "trial_id": "NCT00236912",
+          "criterion_type": "inclusion",
+          "criterion_text": "Two or more symptoms of acute appendicitis for at least 24 hours or radiologic evidence of complicated appendicitis",
+          "gold_label": "included",
+          "label": "included",
+          "gold_evidence": [
+            0,
+            1,
+            2,
+            5
+          ],
+          "evidence": [
+            0,
+            1,
+            5
+          ],
+          "raw_output": "{\"label\": \"included\", \"evidence_sentence_ids\": [0, 1, 5]}",
+          "gold_evidence_text": {
+            "0": "A 15-year-old girl presents to the ER with abdominal pain.",
+            "1": "The pain appeared gradually and was periumbilical at first, localizing to the right lower quadrant over hours.",
+            "2": "She has had no appetite since yesterday but denies diarrhea.",
+            "5": "On an abdominal ultrasound, a markedly edematous appendix is seen."
+          },
+          "pred_evidence_text": {
+            "0": "A 15-year-old girl presents to the ER with abdominal pain.",
+            "1": "The pain appeared gradually and was periumbilical at first, localizing to the right lower quadrant over hours.",
+            "5": "On an abdominal ultrasound, a markedly edematous appendix is seen."
+          }
+        },
+        {
+          "annotation_id": 691,
+          "patient_id": "sigir-20158",
+          "trial_id": "NCT00393913",
+          "criterion_type": "inclusion",
+          "criterion_text": "Experiences symptoms of OSA, including snoring and sleepiness",
+          "gold_label": "included",
+          "label": "included",
+          "gold_evidence": [
+            0,
+            2
+          ],
+          "evidence": [
+            0
+          ],
+          "raw_output": "{\"label\": \"included\", \"evidence_sentence_ids\": [0]}",
+          "gold_evidence_text": {
+            "0": "A 10 yo boy with nighttime snoring, pauses in breathing, and restlessness with nighttime awakenings.",
+            "2": "The boy's teacher recently contacted his parents because she was concerned about his declining grades, lack of attention, and excessive sleepiness during class."
+          },
+          "pred_evidence_text": {
+            "0": "A 10 yo boy with nighttime snoring, pauses in breathing, and restlessness with nighttime awakenings."
+          }
+        }
+      ]
+    }
+  }
+}
