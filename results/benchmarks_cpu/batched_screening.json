@@ -1,0 +1,25 @@
+{
+  "env": {
+    "device": "Intel64 Family 6 Model 154 Stepping 4, GenuineIntel",
+    "dtype": "torch.float32",
+    "torch": "2.15.0+cpu",
+    "repeats": 3,
+    "statistic": "median after 1 warm-up"
+  },
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "adapter": "outputs/hf-lora",
+  "rows": [
+    {
+      "criteria": 21,
+      "prompt_tokens_mean": 356.85714285714283,
+      "shared_prefix_tokens": 238,
+      "sequential_s": 255.42142030003015,
+      "prefix_reuse_s": 197.6064616999356,
+      "batched_s": 60.908613500068896,
+      "batched_prefill_s": 43.489275700063445,
+      "batched_decode_s": 17.41933780000545,
+      "reuse_equal": true,
+      "batched_equal": true
+    }
+  ]
+}
