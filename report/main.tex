@@ -391,7 +391,10 @@ The implementation, experiments and this report were produced with the help of a
 \item Demo video: \url{https://youtu.be/n4dS_2brjwQ}
 \item Target adapter: \url{https://huggingface.co/ibrahimmlk/trialsieve-qwen2.5-1.5b-lora}
 \item Draft adapter: \url{https://huggingface.co/ibrahimmlk/trialsieve-qwen2.5-0.5b-draft-lora}
-\item Split and manifest: \code{python scripts/make\_split.py} $\rightarrow$ \code{data/splits/split\_manifest.json}
+\item Execution instructions (setup, application, every experiment): \url{https://github.com/ibrahimmlk/trialsieve#readme}
+\item Split manifest (\code{python scripts/make\_split.py}): \url{https://github.com/ibrahimmlk/trialsieve/blob/main/data/splits/split_manifest.json}
+\item Benchmark logs (T4 GPU and laptop CPU): \url{https://github.com/ibrahimmlk/trialsieve/tree/main/results/benchmarks} and \url{https://github.com/ibrahimmlk/trialsieve/tree/main/results/benchmarks_cpu}
+\item Metrics, predictions, training logs, error analysis: \url{https://github.com/ibrahimmlk/trialsieve/tree/main/results}
 \item Training and GPU evaluation: \code{notebooks/kaggle\_finetune.ipynb}, \code{notebooks/kaggle\_benchmarks\_final.ipynb}
 \item Tests: \code{pytest tests}; figures: \code{python scripts/make\_figures.py}; error analysis: \code{python scripts/error\_analysis.py}
 \item Application: double-click \code{run\_app.bat} (opens \url{http://127.0.0.1:7860})
